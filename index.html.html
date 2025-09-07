@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>大一上学期课程表</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 20px;
+      background: #fffdf8;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #444;
+    }
+    #calendar-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    /* 顶部月份标题 + 箭头容器 */
+    .month-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0 15px;
+      position: relative;
+    }
+    .month-header h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #333;
+    }
+    /* 右上角箭头容器 */
+    .arrow-container {
+      position: absolute;
+      right: 0;
+      top: 0;
+      display: flex;
+      gap: 8px;
+    }
+    .arrow {
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;         
+      border: none;
+      background: #ff9f80;        /* 柔和的橙色 */
+      color: white;
+      font-size: 20px;            
+      font-weight: bold;          
+      display: flex;              
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      transition: background 0.2s, transform 0.15s;
+    }
+    .arrow:hover {
+      background: #ff7043;        
+      transform: scale(1.1);
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .day {
+      background: white;
+      border-radius: 16px;
+      padding: 10px;
+      text-align: center;
+      min-height: 70px;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.15s ease, background 0.2s;
+    }
+    .day:hover {
+      background: #fff3e0;
+      transform: scale(1.05);
+    }
+    .past {
+      color: #bbb;
+    }
+    .today {
+      border: 3px solid #ffb347;
+    }
+    /* 周末样式：橙色 */
+    .day.weekend {
+      background: #fff3e0;   /* 浅橙背景 */
+      color: #e65100;        /* 深橙字体 */
+      font-weight: bold;
+    }
+    .day.weekend:hover {
+      background: #ffe0b2;   /* hover 更深一点橙色 */
+    }
+
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      color: #444;
+      position: relative;
+    }
+    .weekdays div:first-child,
+    .weekdays div:last-child {
+      color: #ff7043;   /* 橙色星期六日标题 */
+    }
+    /* 弹出框 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #fffef9;
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      min-height: 320px;
+      text-align: center;
+      font-size: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .modal-content h2 {
+      margin-top: 0;
+      color: #444;
+    }
+    .modal textarea {
+      width: calc(100% - 30px);
+      height: 200px;
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid #ffd580;
+      background: #fffaf3;
+      resize: vertical;
+      margin: 15px auto;
+      display: block;
+      box-sizing: border-box;
+    }
+    .modal button {
+      background: #ffb347;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      margin: 8px;
+      border-radius: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .modal button:hover {
+      background: #ff9800;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>大一上学期课程表</h1>
+  <div id="calendar-wrapper">
+    <div class="month-header">
+      <h2 id="monthTitle"></h2>
+      <div class="arrow-container">
+        <button class="arrow" onclick="prevMonth()">❮</button>
+        <button class="arrow" onclick="nextMonth()">❯</button>
+      </div>
+    </div>
+    <div class="weekdays">
+      <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+    </div>
+    <div id="calendar-container" class="calendar"></div>
+  </div>
+
+  <!-- 弹出框 -->
+  <div id="courseModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalDate"></h2>
+      <textarea id="courseInput" placeholder="输入当天课程..."></textarea>
+      <br>
+      <button onclick="saveCourse()">保存</button>
+      <button onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+
+  <script>
+    const startDate = new Date(2025, 8, 1); // 2025-09-01
+    const endDate = new Date(2026, 0, 31);  // 2026-01-31
+    let courses = JSON.parse(localStorage.getItem("courses")) || {};
+    let selectedDate = "";
+
+    let today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+
+    function renderCalendar(year, month) {
+      const container = document.getElementById("calendar-container");
+      container.innerHTML = "";
+
+      const monthTitle = document.getElementById("monthTitle");
+      monthTitle.textContent = `${year}年 ${month+1}月`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      for (let i=0; i<firstDay; i++) {
+        const empty = document.createElement("div");
+        container.appendChild(empty);
+      }
+
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+
+      for (let day=1; day<=daysInMonth; day++) {
+        const dayDiv = document.createElement("div");
+        const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+        const currentDate = new Date(year, month, day);
+
+        dayDiv.className = "day";
+
+        // 周末标记
+        if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+          dayDiv.classList.add("weekend");
+        }
+
+        if (currentDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+          dayDiv.classList.add("past");
+        }
+        if (dateStr === today.toISOString().split("T")[0]) {
+          dayDiv.classList.add("today");
+        }
+
+        dayDiv.textContent = day;
+        dayDiv.onclick = () => openModal(dateStr);
+
+        container.appendChild(dayDiv);
+      }
+    }
+
+    function prevMonth() {
+      if (currentYear > startDate.getFullYear() || (currentYear === startDate.getFullYear() && currentMonth > startDate.getMonth())) {
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        renderCalendar(currentYear, currentMonth);
+      }
+    }
+
+    function nextMonth() {
+      if (currentYear < endDate.getFullYear() || (currentYear === endDate.getFullYear() && currentMonth < endDate.getMonth())) {
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        renderCalendar(currentYear, currentMonth);
+      }
+    }
+
+    function openModal(dateStr) {
+      selectedDate = dateStr;
+      document.getElementById("modalDate").textContent = dateStr;
+      document.getElementById("courseInput").value = courses[dateStr] || "";
+      document.getElementById("courseModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("courseModal").style.display = "none";
+    }
+
+    function saveCourse() {
+      courses[selectedDate] = document.getElementById("courseInput").value;
+      localStorage.setItem("courses", JSON.stringify(courses));
+      closeModal();
+    }
+
+    renderCalendar(currentYear, currentMonth);
+  </script>
+</body>
+</html>
